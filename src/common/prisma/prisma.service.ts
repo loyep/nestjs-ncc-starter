@@ -1,5 +1,4 @@
 import {
-  INestApplication,
   Injectable,
   OnApplicationBootstrap,
   OnApplicationShutdown,
@@ -21,13 +20,17 @@ export class PrismaService
     super();
   }
 
-  onApplicationShutdown(signal?: string) {
+  onApplicationShutdown() {
     this.$disconnect();
   }
 
-  onModuleDestroy() {}
+  onModuleDestroy() {
+    //
+  }
 
-  onApplicationBootstrap() {}
+  onApplicationBootstrap() {
+    //
+  }
 
   async onModuleInit() {
     await this.$connect();

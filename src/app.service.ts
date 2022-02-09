@@ -2,11 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from './common/prisma/prisma.service';
 
+const awaitTimeout = (time: number) => {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, time);
+  });
+};
+
 @Injectable()
 export class AppService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getHello(): string {
+  async getHello(): Promise<string> {
+    // await awaitTimeout(2000)
     return 'Hello World!';
   }
 
