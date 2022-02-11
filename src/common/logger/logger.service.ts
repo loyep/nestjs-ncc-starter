@@ -32,19 +32,35 @@ export class LoggerService implements NestLoggerService {
   constructor(
     @Optional() protected context?: string,
     @Optional() protected options: { timestamp?: boolean } = {},
-  ) {
-  }
+  ) {}
 
   get loggerInstance(): Logger {
     if (!LoggerService.staticInstanceRef) {
-      const name = 'aorajs'
+      const name = 'aorajs';
       LoggerService.staticInstanceRef = createLogger({
+        exitOnError: false,
         format: combine(
-          label({ label: this.context || name }),
-          timestamp(),
-          metadata(),
-          prettyPrint(),
+          colorize({
+            colors: {
+              error: 'red',
+              info: 'green',
+              warn: 'yellow',
+              debug: 'green',
+              verbose: 'red',
+            },
+          }),
+          splat(),
+          timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          format.printf((info) => {
+            if (info.stack) {
+              info.message = info.stack;
+            }
+            return `${info.timestamp} [${process.pid}] ${info.level}: [${
+              info.context || 'Application'
+            }] ${info.message}`;
+          }),
         ),
+        defaultMeta: { pid: process.pid },
         transports: [
           new transports.Console(),
           new DailyRotateFile({
@@ -52,7 +68,9 @@ export class LoggerService implements NestLoggerService {
             dirname: 'storages/logs',
             datePattern: 'YYYY-MM-DD-HH',
             zippedArchive: true,
+            handleExceptions: true,
             maxSize: '20m',
+            json: false,
             maxFiles: '14d',
           }),
         ],
