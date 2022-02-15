@@ -2,7 +2,6 @@ import {
   Injectable,
   Scope,
   LoggerService as NestLoggerService,
-  LogLevel,
   Optional,
 } from '@nestjs/common';
 import { Logger } from 'winston';
@@ -16,6 +15,8 @@ import {
 } from 'winston';
 export const isString = (val: any): val is string => typeof val === 'string';
 
+type LogLevel = "log" | "error" | "warn" | "verbose" | "debug"
+
 const { combine, timestamp, colorize, splat, prettyPrint, ms, printf } = format;
 
 const loggerFormat = [
@@ -23,14 +24,12 @@ const loggerFormat = [
   prettyPrint(),
   ms(),
   printf((info) => {
-    // if (info.stack) {
-    //   info.message = info.stack;
-    // }
-    console.log(info)
-    const stack = info.stack ? `\n${info.stack}` : ''
+    if (info.stack) {
+      info.message = info.stack;
+    }
     return `[${process.pid}]${info.timestamp} ${info.level} [${
       info.context || 'Application'
-    }] ${info.ms} ${info.message}${stack}`;
+    }] ${info.ms} ${info.message}`;
     // [Nest] 58402  - 2022/02/11 下午3:40:43     LOG [NestFactory] Starting Nest application...
   }),
 ];
@@ -49,7 +48,7 @@ export class LoggerService implements NestLoggerService {
 
   get loggerInstance(): Logger {
     if (!LoggerService.staticInstanceRef) {
-      const name = 'aorajs';
+      const name = 'nestjs';
       LoggerService.staticInstanceRef = createLogger({
         exitOnError: false,
         defaultMeta: { pid: process.pid },
@@ -128,7 +127,7 @@ export class LoggerService implements NestLoggerService {
     this.printMessages(messages, context, 'verbose');
   }
 
-  setLogLevels?(levels: (LogLevel & WinstonLogLevel)[]) {
+  setLogLevels?(levels: (LogLevel)[]) {
     // this.loggerInstance.configure({
     // levels: levels as WinstonLogLevel[]
     // });
@@ -151,7 +150,6 @@ export class LoggerService implements NestLoggerService {
 
   private getContextAndStackAndMessagesToPrint(args: unknown[]) {
     const { messages, context } = this.getContextAndMessagesToPrint(args);
-    console.log(args)
     if (messages?.length <= 1) {
       return { messages, context };
     }
@@ -170,10 +168,10 @@ export class LoggerService implements NestLoggerService {
   protected printMessages(
     messages: unknown[],
     context = '',
-    logLevel: WinstonLogLevel = 'info',
+    logLevel: string = 'info',
   ) {
     messages.forEach((message) => {
-      this.loggerInstance.log(logLevel, message as string, { context });
+      this.loggerInstance.log(logLevel as any, message as string, { context });
     });
   }
 }
